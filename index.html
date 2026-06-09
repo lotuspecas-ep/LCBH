@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edoardo Parini — Consulenza Strategica</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --black:#1d1d1f;--mid:#6e6e73;--light:#aeaeb2;--xlight:#d1d1d6;
+    --bg:#f5f5f7;--white:#ffffff;--blue:#0071e3;--card:#ffffff;
+    --serif:Georgia,'Times New Roman',serif;
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  }
+  html,body{height:100%;background:var(--black);font-family:var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased}
+  #deck{width:100vw;height:100vh;position:relative;overflow:hidden}
+  .slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:clamp(32px,6vw,80px);opacity:0;pointer-events:none;transition:opacity .45s cubic-bezier(.4,0,.2,1),transform .45s cubic-bezier(.4,0,.2,1);transform:translateX(60px);will-change:opacity,transform}
+  .slide.active{opacity:1;pointer-events:all;transform:translateX(0)}
+  .slide.exit{opacity:0;transform:translateX(-60px);pointer-events:none}
+  .slide-dark{background:var(--black)}.slide-light{background:var(--white)}.slide-grey{background:var(--bg)}
+  #progress-bar{position:fixed;top:0;left:0;height:2px;background:var(--blue);transition:width .4s ease;z-index:100}
+  #dots{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:100}
+  .dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;transition:background .25s,transform .25s}
+  .dot.active{background:var(--white);transform:scale(1.4)}
+  .nav-arrow{position:fixed;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:100;transition:background .2s,transform .2s;backdrop-filter:blur(8px)}
+  .nav-arrow:hover{background:rgba(255,255,255,.22);transform:translateY(-50%) scale(1.08)}
+  .nav-arrow svg{stroke:#fff}
+  #prev{left:20px}#next{right:20px}
+  .nav-arrow.dim{opacity:0;pointer-events:none}
+  #counter{position:fixed;top:20px;right:24px;font-size:11px;color:rgba(255,255,255,.35);letter-spacing:.08em;z-index:100;font-variant-numeric:tabular-nums}
+  #lang-toggle{position:fixed;top:16px;left:24px;z-index:110;display:flex;border-radius:100px;overflow:hidden;border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(8px)}
+  .lang-btn{padding:5px 13px;font-size:11px;font-weight:600;letter-spacing:.07em;cursor:pointer;border:none;background:transparent;color:rgba(255,255,255,.4);font-family:var(--sans);transition:background .2s,color .2s}
+  .lang-btn.active{background:var(--blue);color:#fff}
+  .lang-btn:hover:not(.active){color:rgba(255,255,255,.75)}
+  .eyebrow{font-size:clamp(10px,1.1vw,12px);font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin-bottom:18px}
+  .display{font-family:var(--serif);font-size:clamp(36px,6.5vw,82px);font-weight:400;line-height:1.06;letter-spacing:-.02em;color:var(--white)}
+  .headline{font-family:var(--serif);font-size:clamp(26px,3.8vw,52px);font-weight:400;line-height:1.1;letter-spacing:-.018em}
+  .slide-dark .headline{color:#fff}.slide-light .headline,.slide-grey .headline{color:var(--black)}
+  .body-text{font-size:clamp(13px,1.4vw,16px);line-height:1.65;color:var(--mid);max-width:560px}
+  .slide-dark .body-text{color:rgba(255,255,255,.55)}
+  .label{font-size:11px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--light)}
+  .slide-dark .label{color:rgba(255,255,255,.4)}
+  .card-grid{display:grid;gap:16px;margin-top:40px}.card-grid.cols-3{grid-template-columns:repeat(3,1fr)}
+  .card{background:var(--card);border-radius:14px;padding:clamp(20px,2.5vw,32px);cursor:pointer;transition:transform .22s,box-shadow .22s;border:1px solid rgba(0,0,0,.06)}
+  .card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.1)}
+  .card-title{font-size:clamp(13px,1.5vw,16px);font-weight:600;color:var(--black);margin-bottom:10px}
+  .card-body{font-size:clamp(12px,1.2vw,14px);line-height:1.6;color:var(--mid)}
+  .tag{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--blue);margin-bottom:14px;opacity:.85}
+  .hub-wrap{position:relative;margin-top:32px;height:clamp(260px,38vh,400px)}
+  .hub-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:clamp(90px,11vw,130px);height:clamp(90px,11vw,130px);border-radius:50%;background:var(--blue);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;box-shadow:0 0 0 8px rgba(0,113,227,.15)}
+  .hub-center span:first-child{font-size:clamp(13px,1.5vw,16px);font-weight:600;color:#fff}
+  .hub-center span:last-child{font-size:clamp(11px,1.1vw,13px);color:rgba(255,255,255,.7)}
+  .hub-node{position:absolute;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:10px 14px;font-size:clamp(10px,1.1vw,12px);font-weight:500;color:rgba(255,255,255,.75);text-align:center;cursor:pointer;transition:background .2s,transform .2s;white-space:nowrap}
+  .hub-node:hover{background:rgba(255,255,255,.14);transform:scale(1.05)}
+  .scope-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 40px;margin-top:36px}
+  .scope-item{display:flex;gap:16px;align-items:flex-start;padding:16px 0;border-bottom:1px solid rgba(0,0,0,.07);cursor:pointer;transition:opacity .2s}
+  .scope-item:hover{opacity:.7}
+  .scope-num{font-family:var(--serif);font-size:13px;color:var(--blue);min-width:22px;padding-top:2px}
+  .scope-text strong{display:block;font-size:clamp(13px,1.4vw,15px);font-weight:600;color:var(--black);margin-bottom:4px}
+  .scope-text p{font-size:clamp(11px,1.1vw,13px);color:var(--mid);line-height:1.5}
+  .price-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:28px}
+  .price-card{border-radius:16px;padding:clamp(18px,2.2vw,28px);cursor:pointer;transition:transform .22s}
+  .price-card:hover{transform:translateY(-4px)}
+  .price-card .amount{font-family:var(--serif);font-size:clamp(20px,2.6vw,32px);font-weight:400;line-height:1;margin-bottom:5px}
+  .price-card .freq{font-size:12px;color:var(--blue);font-weight:500;letter-spacing:.05em}
+  .slide-light .price-card{background:var(--bg);border:1px solid rgba(0,0,0,.06)}
+  .slide-light .price-card .amount{color:var(--black)}
+  .slide-dark .price-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)}
+  .slide-dark .price-card .amount{color:#fff}
+
+  /* equity tranche bar */
+  .equity-bar{margin-top:20px;background:rgba(0,0,0,.05);border-radius:100px;height:6px;overflow:hidden}
+  .slide-dark .equity-bar{background:rgba(255,255,255,.1)}
+  .equity-fill{height:100%;border-radius:100px;background:var(--blue);transition:width .6s ease}
+  .equity-labels{display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:var(--light)}
+  .slide-dark .equity-labels{color:rgba(255,255,255,.3)}
+
+  .vesting-list{margin-top:18px;display:flex;flex-direction:column;gap:8px}
+  .vesting-item{display:flex;align-items:center;gap:12px;font-size:clamp(11px,1.2vw,13px);color:var(--mid);cursor:pointer;padding:7px 12px;border-radius:8px;transition:background .2s}
+  .slide-dark .vesting-item{color:rgba(255,255,255,.55)}
+  .vesting-item:hover{background:rgba(0,113,227,.07)}
+  .slide-dark .vesting-item:hover{background:rgba(255,255,255,.07)}
+  .vesting-dot{width:7px;height:7px;border-radius:50%;background:var(--blue);flex-shrink:0}
+  .vesting-dot.green{background:#30d158}
+  .vesting-dot.orange{background:#ff9f0a}
+
+  /* disclaimer banner */
+  .disclaimer{margin-top:16px;padding:10px 16px;border-radius:10px;background:rgba(0,113,227,.07);border:1px solid rgba(0,113,227,.15);font-size:11px;color:var(--mid);line-height:1.5}
+  .slide-dark .disclaimer{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4)}
+
+  .profile-wrap{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-top:32px;align-items:start}
+  .stat-row{display:flex;flex-direction:column;gap:12px}
+  .stat-item{display:flex;align-items:baseline;gap:12px;padding:16px 20px;border-radius:12px;background:var(--bg);border:1px solid rgba(0,0,0,.05);cursor:pointer;transition:transform .2s}
+  .stat-item:hover{transform:translateX(4px)}
+  .stat-value{font-family:var(--serif);font-size:clamp(20px,2.5vw,30px);color:var(--blue);font-weight:400;line-height:1}
+  .stat-label{font-size:13px;color:var(--mid)}
+  .closing-subline{font-size:clamp(14px,1.6vw,18px);color:rgba(255,255,255,.45);margin-top:28px;line-height:1.6;max-width:500px}
+  .contact-line{margin-top:48px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .contact-pill{font-size:clamp(11px,1.2vw,13px);color:var(--blue);font-weight:500;padding:7px 14px;border:1px solid rgba(0,113,227,.35);border-radius:100px;cursor:pointer;transition:background .2s;text-decoration:none}
+  .contact-pill:hover{background:rgba(0,113,227,.1)}
+  #modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(16px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;padding:24px}
+  #modal-overlay.open{opacity:1;pointer-events:all}
+  #modal-box{background:var(--white);border-radius:20px;padding:clamp(28px,4vw,48px);max-width:520px;width:100%;max-height:80vh;overflow-y:auto;transform:scale(.94) translateY(12px);transition:transform .3s cubic-bezier(.4,0,.2,1);position:relative}
+  #modal-overlay.open #modal-box{transform:scale(1) translateY(0)}
+  #modal-close{position:absolute;top:18px;right:18px;width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--mid);transition:background .2s}
+  #modal-close:hover{background:var(--xlight)}
+  #modal-title{font-family:var(--serif);font-size:clamp(20px,2.5vw,28px);color:var(--black);margin-bottom:16px;padding-right:32px;line-height:1.2}
+  #modal-body{font-size:14px;line-height:1.75;color:var(--mid)}
+  #modal-body strong{color:var(--black)}#modal-body ul{padding-left:18px;margin-top:10px}#modal-body li{margin-bottom:7px}
+  .modal-disclaimer{margin-top:20px;padding:12px 16px;border-radius:10px;background:#f5f5f7;border-left:3px solid var(--blue);font-size:12px;color:var(--mid);line-height:1.6}
+  #kb-hint{position:fixed;bottom:56px;right:24px;font-size:10px;color:rgba(255,255,255,.2);letter-spacing:.06em;z-index:100;pointer-events:none}
+  @media(max-width:680px){
+    .card-grid.cols-3{grid-template-columns:1fr}.scope-grid{grid-template-columns:1fr}
+    .price-row{grid-template-columns:1fr;gap:10px}.profile-wrap{grid-template-columns:1fr;gap:24px}
+    .hub-wrap{height:200px}.hub-node{font-size:9px;padding:7px 10px}
+    .hub-center{width:76px;height:76px}.hub-center span:first-child{font-size:12px}.hub-center span:last-child{font-size:10px}
+    #prev{left:8px}#next{right:8px}#dots{bottom:14px}.nav-arrow{width:36px;height:36px}
+    .slide{padding:28px 24px 70px}#kb-hint{display:none}#lang-toggle{top:12px;left:12px}#counter{top:16px;right:14px}
+  }
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<div id="counter">1 / 8</div>
+<div id="kb-hint">← → tasti freccia per navigare</div>
+<div id="lang-toggle">
+  <button class="lang-btn active" id="btn-it" onclick="setLang('it')">IT</button>
+  <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+</div>
+<button class="nav-arrow dim" id="prev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+<button class="nav-arrow" id="next"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+<div id="dots"></div>
+
+<div id="deck">
+
+<!-- S1 COVER -->
+<section class="slide slide-dark active" id="s1">
+  <div style="position:absolute;right:0;top:0;bottom:0;width:42%;overflow:hidden;opacity:.04;pointer-events:none;user-select:none;"><div style="font-family:Georgia,serif;font-size:clamp(180px,22vw,320px);font-weight:400;color:#fff;line-height:.85;padding-top:10%;padding-left:8%;letter-spacing:-.05em;">EP</div></div>
+  <div style="position:relative;z-index:1;max-width:600px;">
+    <div class="eyebrow">Edoardo Parini · 2025</div>
+    <div class="display" style="margin-bottom:20px;" data-i18n="s1_display">Consulenza<br>Strategica</div>
+    <div class="body-text" style="font-size:clamp(14px,1.6vw,18px);color:rgba(255,255,255,.5);margin-bottom:36px;">
+      <span data-i18n="s1_sub">Una proposta per il Progetto Boutique Green Hostel</span><br>
+      <span style="color:rgba(255,255,255,.25);">Laura Cretti · Lago d'Iseo</span>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <button onclick="goTo(4)" style="background:var(--blue);color:#fff;border:none;padding:12px 24px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:background .2s;" onmouseover="this.style.background='#0058b0'" onmouseout="this.style.background='var(--blue)'" data-i18n="s1_cta1">Vedi le Opzioni →</button>
+      <button onclick="goTo(1)" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.2);padding:12px 24px;border-radius:100px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans);transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,.15)'" onmouseout="this.style.background='rgba(255,255,255,.1)'" data-i18n="s1_cta2">Scopri di più</button>
+    </div>
+  </div>
+</section>
+
+<!-- S2 PERCHÉ -->
+<section class="slide slide-light" id="s2">
+  <div class="eyebrow" data-i18n="s2_eyebrow">Perché questa partnership</div>
+  <div class="headline" data-i18n="s2_headline">Tre aree.<br>Una rete.</div>
+  <div class="body-text" data-i18n="s2_body">Il progetto si colloca esattamente all'intersezione del track record di Edoardo — non accanto ad esso.</div>
+  <div class="card-grid cols-3">
+    <div class="card" onclick="openModal('esg')"><div class="tag">ESG · Green Tech</div><div class="card-title" data-i18n="c1_title">Eco-certificazione &amp; Impatto</div><div class="card-body" data-i18n="c1_body">Co-fondatore di Oceanhis. Strumenti eco-certificazione blockchain. €500k+ in fondi EU non diluitivi. Profonda conoscenza dei framework ESG.</div><div style="margin-top:14px;font-size:11px;color:var(--blue);font-weight:500;" data-i18n="tap_expand">Tocca per approfondire ↗</div></div>
+    <div class="card" onclick="openModal('funding')"><div class="tag" data-i18n="c2_tag">Funding · Finanza</div><div class="card-title" data-i18n="c2_title">Capitale &amp; Bandi</div><div class="card-body" data-i18n="c2_body">€2M+ raccolti tra round pubblici e privati. Horizon 2020, PNRR, angel investor, strategia equity crowdfunding.</div><div style="margin-top:14px;font-size:11px;color:var(--blue);font-weight:500;" data-i18n="tap_expand">Tocca per approfondire ↗</div></div>
+    <div class="card" onclick="openModal('gtm')"><div class="tag">Strategia · GTM</div><div class="card-title" data-i18n="c3_title">Go-to-Market &amp; Crescita</div><div class="card-body" data-i18n="c3_body">10+ anni nell'orchestrazione di lanci su più verticali. Venture builder in FoolFarm. Network tra Europa, Asia e Americhe.</div><div style="margin-top:14px;font-size:11px;color:var(--blue);font-weight:500;" data-i18n="tap_expand">Tocca per approfondire ↗</div></div>
+  </div>
+</section>
+
+<!-- S3 MODELLO -->
+<section class="slide slide-dark" id="s3">
+  <div class="eyebrow" data-i18n="s3_eyebrow">Il Modello di Consulenza</div>
+  <div class="headline" style="color:#fff;" data-i18n="s3_headline">Non un consulente solo.</div>
+  <div class="body-text" data-i18n="s3_body">Uno Strategic Orchestrator — un unico punto di riferimento, un intero ecosistema alle spalle.</div>
+  <div class="hub-wrap">
+    <div class="hub-center"><span>Edoardo</span><span>Parini</span></div>
+    <div class="hub-node" style="top:2%;left:4%;" onclick="openModal('spec-legal')" data-i18n="node1">Legale &amp; Corporate</div>
+    <div class="hub-node" style="top:2%;right:4%;" onclick="openModal('spec-mkt')" data-i18n="node2">Marketing &amp; PR</div>
+    <div class="hub-node" style="top:38%;left:0%;" onclick="openModal('spec-esg')" data-i18n="node3">ESG Advisor</div>
+    <div class="hub-node" style="top:38%;right:0%;" onclick="openModal('spec-fin')" data-i18n="node4">Finance &amp; IR</div>
+    <div class="hub-node" style="bottom:4%;left:4%;" onclick="openModal('spec-tech')" data-i18n="node5">Tech &amp; Digital</div>
+    <div class="hub-node" style="bottom:4%;right:4%;" onclick="openModal('spec-re')" data-i18n="node6">Real Estate</div>
+    <div class="hub-node" style="top:2%;left:36%;" onclick="openModal('spec-fund')" data-i18n="node7">Fundraising</div>
+    <div class="hub-node" style="bottom:4%;right:36%;" onclick="openModal('spec-intl')" data-i18n="node8">Network Intl</div>
+  </div>
+  <div style="font-size:11px;color:rgba(255,255,255,.22);text-align:center;margin-top:8px;" data-i18n="s3_note">Ogni nodo attivato su richiesta. Tocca per saperne di più.</div>
+</section>
+
+<!-- S4 SCOPE -->
+<section class="slide slide-light" id="s4">
+  <div class="eyebrow" data-i18n="s4_eyebrow">Perimetro di Lavoro</div>
+  <div class="headline" data-i18n="s4_headline">Cosa è incluso.</div>
+  <div class="scope-grid">
+    <div class="scope-item" onclick="openModal('scope-1')"><span class="scope-num">01</span><div class="scope-text"><strong data-i18n="sc1_t">Governance &amp; Struttura Societaria</strong><p data-i18n="sc1_p">Forma giuridica, patti parasociali, gestione investitori.</p></div></div>
+    <div class="scope-item" onclick="openModal('scope-4')"><span class="scope-num">04</span><div class="scope-text"><strong data-i18n="sc4_t">Framework ESG &amp; Certificazioni</strong><p data-i18n="sc4_p">KPI di impatto, B Corp / LEED / GSTC, reporting annuale.</p></div></div>
+    <div class="scope-item" onclick="openModal('scope-2')"><span class="scope-num">02</span><div class="scope-text"><strong data-i18n="sc2_t">Fundraising &amp; Bandi Pubblici</strong><p data-i18n="sc2_p">Angel/VC, PNRR, fondi EU, strategia crowdfunding equity.</p></div></div>
+    <div class="scope-item" onclick="openModal('scope-5')"><span class="scope-num">05</span><div class="scope-text"><strong data-i18n="sc5_t">Tech &amp; Digitalizzazione</strong><p data-i18n="sc5_p">PMS, channel manager, pagamenti digitali, AI per hospitality.</p></div></div>
+    <div class="scope-item" onclick="openModal('scope-3')"><span class="scope-num">03</span><div class="scope-text"><strong data-i18n="sc3_t">GTM &amp; Strategia di Brand</strong><p data-i18n="sc3_p">Supervisione lancio, partnership, posizionamento competitivo.</p></div></div>
+    <div class="scope-item" onclick="openModal('scope-6')"><span class="scope-num">06</span><div class="scope-text"><strong data-i18n="sc6_t">Espansione &amp; Investor Relations</strong><p data-i18n="sc6_p">Modello scalabile, pitch deck, data room, scouting location.</p></div></div>
+  </div>
+</section>
+
+<!-- S5 OPZIONE A -->
+<section class="slide slide-light" id="s5">
+  <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:4px;">
+    <div class="eyebrow" style="margin:0;" data-i18n="s5_eyebrow">Opzione A</div>
+    <span style="font-size:12px;color:var(--light);" data-i18n="s5_sub">6 + 6 mesi · rinnovabile</span>
+  </div>
+  <div class="headline" data-i18n="s5_headline">Ingresso progressivo.</div>
+  <div class="price-row">
+    <div class="price-card" onclick="openModal('onb')"><div class="label" data-i18n="pc1_l">Onboarding Strategico</div><div class="amount">€ 2.000</div><div class="freq" data-i18n="pc1_f">una tantum ↗</div></div>
+    <div class="price-card" onclick="openModal('retainer')"><div class="label" data-i18n="pc2_l">Retainer Mensile</div><div class="amount">€ 1.800–2.200</div><div class="freq" data-i18n="pc2_f">al mese ↗</div></div>
+    <div class="price-card" onclick="openModal('equity-a')">
+      <div class="label" data-i18n="pc3_l">Equity — Percorso</div>
+      <div class="amount" data-i18n="eqa_amount">2–3% → 7%</div>
+      <div class="freq" data-i18n="pc3_f">base + milestone ↗</div>
+      <div class="equity-bar" style="margin-top:12px;"><div class="equity-fill" style="width:30%"></div></div>
+      <div class="equity-labels"><span>0%</span><span data-i18n="eqa_target">obiettivo 7%</span><span>10%</span></div>
+    </div>
+  </div>
+  <div class="vesting-list">
+    <div class="vesting-item" onclick="openModal('cliff')"><div class="vesting-dot"></div><span data-i18n="v1">Cliff 6 mesi — nessuna equity prima di questo punto</span></div>
+    <div class="vesting-item" onclick="openModal('vest-monthly')"><div class="vesting-dot"></div><span data-i18n="v2">Vesting mensile progressivo per 24 mesi (quota base)</span></div>
+    <div class="vesting-item" onclick="openModal('milestones')"><div class="vesting-dot green"></div><span data-i18n="v3m">Tranche milestone: +% al raggiungimento di obiettivi concordati</span></div>
+    <div class="vesting-item" onclick="openModal('aucap')"><div class="vesting-dot orange"></div><span data-i18n="v4a">AUCAP: protezione anti-diluzione ad ogni aumento di capitale</span></div>
+  </div>
+  <div class="disclaimer" data-i18n="s5_disc">Le percentuali indicate sono indicative e rappresentano la visione a lungo termine della partnership. Tutti i dettagli — quote, milestone, strumenti giuridici — saranno concordati insieme qualora vi sia interesse reciproco a procedere.</div>
+</section>
+
+<!-- S6 OPZIONE B -->
+<section class="slide slide-dark" id="s6">
+  <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:4px;">
+    <div class="eyebrow" style="margin:0;" data-i18n="s6_eyebrow">Opzione B</div>
+    <span style="font-size:12px;color:rgba(255,255,255,.28);" data-i18n="s6_sub">12 + 12 mesi · ciclo completo</span>
+  </div>
+  <div class="headline" style="color:#fff;" data-i18n="s6_headline">Impegno totale.</div>
+  <div class="price-row">
+    <div class="price-card" onclick="openModal('onb-b')"><div class="label" data-i18n="pc1_l">Onboarding Strategico</div><div class="amount">€ 3.000</div><div class="freq" data-i18n="pc1_f">una tantum ↗</div></div>
+    <div class="price-card" onclick="openModal('retainer-b')"><div class="label" data-i18n="pc2_l">Retainer Mensile</div><div class="amount">€ 2.800–3.500</div><div class="freq" data-i18n="pc2_f">al mese ↗</div></div>
+    <div class="price-card" onclick="openModal('equity-b')">
+      <div class="label" data-i18n="pc3_l_b">Equity — Percorso</div>
+      <div class="amount" data-i18n="eqb_amount">3–5% → 10%</div>
+      <div class="freq" data-i18n="s6_vf">base + milestone + AUCAP ↗</div>
+      <div class="equity-bar" style="margin-top:12px;"><div class="equity-fill" style="width:40%"></div></div>
+      <div class="equity-labels"><span>0%</span><span data-i18n="eqb_target">obiettivo 10% · 3 anni</span><span>10%</span></div>
+    </div>
+  </div>
+  <div class="vesting-list">
+    <div class="vesting-item" onclick="openModal('b-grant')"><div class="vesting-dot"></div><span data-i18n="b1">Gestione attiva bandi EU / PNRR dalla candidatura all'erogazione</span></div>
+    <div class="vesting-item" onclick="openModal('b-chain')"><div class="vesting-dot"></div><span data-i18n="b2">Strutturazione catena: modello replicabile, pianificazione seconda location</span></div>
+    <div class="vesting-item" onclick="openModal('milestones')"><div class="vesting-dot green"></div><span data-i18n="b3m">Tranche milestone su obiettivi concordati: closing round, RevPAR, B Corp, nuove sedi</span></div>
+    <div class="vesting-item" onclick="openModal('aucap')"><div class="vesting-dot orange"></div><span data-i18n="b4a">AUCAP: quota aggiuntiva o anti-diluzione ad ogni aumento di capitale</span></div>
+  </div>
+  <div class="disclaimer" data-i18n="s6_disc">Le percentuali indicate sono indicative e rappresentano la visione a lungo termine della partnership. Tutti i dettagli saranno negoziati e formalizzati insieme, con il supporto di consulenti legali, qualora vi sia interesse a procedere.</div>
+</section>
+
+<!-- S7 PROFILO -->
+<section class="slide slide-grey" id="s7">
+  <div class="eyebrow" data-i18n="s7_eyebrow">Profilo</div>
+  <div class="headline" data-i18n="s7_headline">Edoardo Parini.</div>
+  <div class="profile-wrap">
+    <div>
+      <div style="font-size:13px;color:var(--mid);margin-bottom:16px;line-height:1.5;" data-i18n="s7_role">Innovation Strategy &amp; Tech Consultant<br><span style="color:var(--light);">SaaS · AI · Web3 · ESG · Pagamenti Digitali</span></div>
+      <div class="body-text" style="max-width:none;margin-bottom:16px;" data-i18n="s7_bio1">Consulente con 10+ anni di esperienza nella trasformazione digitale in Europa. Pluripremiato con Horizon 2020. Formazione in design (IED Roma, ECAL Losanna) unita a competenze finanziarie e di strategia aziendale.</div>
+      <div class="body-text" style="max-width:none;" data-i18n="s7_bio2">Opera come <strong style="color:var(--black);">portfolio advisor</strong> su più venture in parallelo — una pratica che porta visione cross-industry e pattern recognition non disponibili ai consulenti mono-settoriali.</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-item" onclick="openModal('stat-fund')"><div class="stat-value">€2M+</div><div class="stat-label" data-i18n="st1">Fondi raccolti</div></div>
+      <div class="stat-item" onclick="openModal('stat-hz')"><div class="stat-value">4×</div><div class="stat-label" data-i18n="st2">Premi Horizon 2020</div></div>
+      <div class="stat-item" onclick="openModal('stat-ven')"><div class="stat-value">5</div><div class="stat-label" data-i18n="st3">Venture co-fondate</div></div>
+      <div class="stat-item" onclick="openModal('stat-lang')"><div class="stat-value" style="font-size:clamp(16px,2vw,24px);">IT · EN · FR</div><div class="stat-label" data-i18n="st4">Lingue</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- S8 CLOSING -->
+<section class="slide slide-dark" id="s8">
+  <div style="max-width:640px;">
+    <div class="eyebrow" data-i18n="s8_eyebrow">Prossimo passo</div>
+    <div class="display" style="font-size:clamp(32px,5.5vw,68px);" data-i18n="s8_display">Il partner giusto<br>non è un fornitore.</div>
+    <div class="closing-subline" data-i18n="s8_sub">Ogni società di consulenza ti dà un report. Edoardo ti dà skin in the game — equity guadagnata mese per mese, al tuo fianco.</div>
+    <div class="contact-line">
+      <a class="contact-pill" href="mailto:parini.edoardo@gmail.com">parini.edoardo@gmail.com</a>
+      <a class="contact-pill" href="tel:+393332581274">+39 333 25 81 274</a>
+      <a class="contact-pill" href="https://cargocollective.com/edoardoparini" target="_blank">edoardoparini.com ↗</a>
+    </div>
+    <div style="margin-top:32px;display:flex;gap:12px;flex-wrap:wrap;">
+      <button onclick="goTo(4)" style="background:var(--blue);color:#fff;border:none;padding:12px 24px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:background .2s;" onmouseover="this.style.background='#0058b0'" onmouseout="this.style.background='var(--blue)'" data-i18n="s8_btn1">Opzione A — 6+6 mesi</button>
+      <button onclick="goTo(5)" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.2);padding:12px 24px;border-radius:100px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans);transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,.15)'" onmouseout="this.style.background='rgba(255,255,255,.1)'" data-i18n="s8_btn2">Opzione B — 12+12 mesi</button>
+    </div>
+  </div>
+</section>
+
+</div><!-- /deck -->
+
+<div id="modal-overlay" onclick="closeModal(event)">
+  <div id="modal-box">
+    <button id="modal-close" onclick="closeModal()">✕</button>
+    <div id="modal-title"></div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// TRANSLATIONS
+// ══════════════════════════════════════════════
+const T = {
+  it:{
+    s1_display:"Consulenza<br>Strategica",s1_sub:"Una proposta per il Progetto Boutique Green Hostel",s1_cta1:"Vedi le Opzioni →",s1_cta2:"Scopri di più",
+    s2_eyebrow:"Perché questa partnership",s2_headline:"Tre aree.<br>Una rete.",s2_body:"Il progetto si colloca esattamente all'intersezione del track record di Edoardo — non accanto ad esso.",
+    c1_title:"Eco-certificazione &amp; Impatto",c1_body:"Co-fondatore di Oceanhis. Strumenti eco-certificazione blockchain. €500k+ in fondi EU non diluitivi. Profonda conoscenza dei framework ESG.",
+    c2_tag:"Funding · Finanza",c2_title:"Capitale &amp; Bandi",c2_body:"€2M+ raccolti tra round pubblici e privati. Horizon 2020, PNRR, angel investor, strategia equity crowdfunding.",
+    c3_title:"Go-to-Market &amp; Crescita",c3_body:"10+ anni nell'orchestrazione di lanci su più verticali. Venture builder in FoolFarm. Network tra Europa, Asia e Americhe.",
+    tap_expand:"Tocca per approfondire ↗",
+    s3_eyebrow:"Il Modello di Consulenza",s3_headline:"Non un consulente solo.",s3_body:"Uno Strategic Orchestrator — un unico punto di riferimento, un intero ecosistema alle spalle.",
+    node1:"Legale &amp; Corporate",node2:"Marketing &amp; PR",node3:"ESG Advisor",node4:"Finance &amp; IR",node5:"Tech &amp; Digital",node6:"Real Estate",node7:"Fundraising",node8:"Network Intl",
+    s3_note:"Ogni nodo attivato su richiesta. Tocca per saperne di più.",
+    s4_eyebrow:"Perimetro di Lavoro",s4_headline:"Cosa è incluso.",
+    sc1_t:"Governance &amp; Struttura Societaria",sc1_p:"Forma giuridica, patti parasociali, gestione investitori.",
+    sc2_t:"Fundraising &amp; Bandi Pubblici",sc2_p:"Angel/VC, PNRR, fondi EU, strategia crowdfunding equity.",
+    sc3_t:"GTM &amp; Strategia di Brand",sc3_p:"Supervisione lancio, partnership, posizionamento competitivo.",
+    sc4_t:"Framework ESG &amp; Certificazioni",sc4_p:"KPI di impatto, B Corp / LEED / GSTC, reporting annuale.",
+    sc5_t:"Tech &amp; Digitalizzazione",sc5_p:"PMS, channel manager, pagamenti digitali, AI per hospitality.",
+    sc6_t:"Espansione &amp; Investor Relations",sc6_p:"Modello scalabile, pitch deck, data room, scouting location.",
+    s5_eyebrow:"Opzione A",s5_sub:"6 + 6 mesi · rinnovabile",s5_headline:"Ingresso progressivo.",
+    pc1_l:"Onboarding Strategico",pc1_f:"una tantum ↗",pc2_l:"Retainer Mensile",pc2_f:"al mese ↗",pc3_l:"Equity — Percorso",pc3_f:"base + milestone ↗",
+    eqa_amount:"2–3% → 7%",eqa_target:"obiettivo 7%",
+    v1:"Cliff 6 mesi — nessuna equity prima di questo punto",v2:"Vesting mensile progressivo per 24 mesi (quota base)",
+    v3m:"Tranche milestone: +% al raggiungimento di obiettivi concordati",v4a:"AUCAP: protezione anti-diluzione ad ogni aumento di capitale",
+    s5_disc:"Le percentuali indicate sono indicative e rappresentano la visione a lungo termine della partnership. Tutti i dettagli — quote, milestone, strumenti giuridici — saranno concordati insieme qualora vi sia interesse reciproco a procedere.",
+    s6_eyebrow:"Opzione B",s6_sub:"12 + 12 mesi · ciclo completo",s6_headline:"Impegno totale.",s6_vf:"base + milestone + AUCAP ↗",
+    pc3_l_b:"Equity — Percorso",eqb_amount:"3–5% → 10%",eqb_target:"obiettivo 10% · 3 anni",
+    b1:"Gestione attiva bandi EU / PNRR dalla candidatura all'erogazione",b2:"Strutturazione catena: modello replicabile, pianificazione seconda location",
+    b3m:"Tranche milestone su obiettivi concordati: closing round, RevPAR, B Corp, nuove sedi",b4a:"AUCAP: quota aggiuntiva o anti-diluzione ad ogni aumento di capitale",
+    s6_disc:"Le percentuali indicate sono indicative e rappresentano la visione a lungo termine della partnership. Tutti i dettagli saranno negoziati e formalizzati insieme, con il supporto di consulenti legali, qualora vi sia interesse a procedere.",
+    s7_eyebrow:"Profilo",s7_headline:"Edoardo Parini.",
+    s7_role:"Innovation Strategy &amp; Tech Consultant<br><span style='color:var(--light)'>SaaS · AI · Web3 · ESG · Pagamenti Digitali</span>",
+    s7_bio1:"Consulente con 10+ anni di esperienza nella trasformazione digitale in Europa. Pluripremiato con Horizon 2020. Formazione in design (IED Roma, ECAL Losanna) unita a competenze finanziarie e di strategia aziendale.",
+    s7_bio2:"Opera come <strong style='color:var(--black)'>portfolio advisor</strong> su più venture in parallelo — visione cross-industry e pattern recognition non disponibili ai consulenti mono-settoriali.",
+    st1:"Fondi raccolti",st2:"Premi Horizon 2020",st3:"Venture co-fondate",st4:"Lingue",
+    s8_eyebrow:"Prossimo passo",s8_display:"Il partner giusto<br>non è un fornitore.",
+    s8_sub:"Ogni società di consulenza ti dà un report. Edoardo ti dà skin in the game — equity guadagnata mese per mese, al tuo fianco.",
+    s8_btn1:"Opzione A — 6+6 mesi",s8_btn2:"Opzione B — 12+12 mesi",
+    kb_hint:"← → tasti freccia per navigare"
+  },
+  en:{
+    s1_display:"Strategic<br>Advisory",s1_sub:"A proposal for the Boutique Green Hostel Project",s1_cta1:"View Options →",s1_cta2:"Learn More",
+    s2_eyebrow:"Why this partnership",s2_headline:"Three areas.<br>One network.",s2_body:"The project sits at the exact intersection of Edoardo's track record — not adjacent to it.",
+    c1_title:"Eco-certification &amp; Impact",c1_body:"Co-founded Oceanhis. Blockchain eco-certification tools. €500k+ in non-dilutive EU funding. Deep ESG frameworks knowledge.",
+    c2_tag:"Funding · Finance",c2_title:"Capital &amp; Grants",c2_body:"€2M+ raised across public and private rounds. Horizon 2020, PNRR, angel investors, equity crowdfunding strategy.",
+    c3_title:"Go-to-Market &amp; Growth",c3_body:"10+ years orchestrating launches across verticals. Venture builder at FoolFarm. Network spanning Europe, Asia, Americas.",
+    tap_expand:"Tap to expand ↗",
+    s3_eyebrow:"The Advisory Model",s3_headline:"Not a solo consultant.",s3_body:"A Strategic Orchestrator — one point of contact, an entire ecosystem behind it.",
+    node1:"Legal &amp; Corporate",node2:"Marketing &amp; PR",node3:"ESG Advisor",node4:"Finance &amp; IR",node5:"Tech &amp; Digital",node6:"Real Estate",node7:"Fundraising",node8:"Intl Network",
+    s3_note:"Each node activated on demand. Tap to learn more.",
+    s4_eyebrow:"Scope of Work",s4_headline:"What's covered.",
+    sc1_t:"Governance &amp; Corporate Structure",sc1_p:"Legal form, shareholder agreements, investor relations.",
+    sc2_t:"Fundraising &amp; Public Grants",sc2_p:"Angel/VC, PNRR, EU funds, equity crowdfunding strategy.",
+    sc3_t:"GTM &amp; Brand Strategy",sc3_p:"Launch oversight, partnerships, competitive positioning.",
+    sc4_t:"ESG Framework &amp; Certifications",sc4_p:"Impact KPIs, B Corp / LEED / GSTC, annual reporting.",
+    sc5_t:"Tech &amp; Digitalisation",sc5_p:"PMS, channel manager, digital payments, AI for hospitality.",
+    sc6_t:"Expansion &amp; Investor Relations",sc6_p:"Scalable model, pitch deck, data room, location scouting.",
+    s5_eyebrow:"Option A",s5_sub:"6 + 6 months · renewable",s5_headline:"Entry engagement.",
+    pc1_l:"Strategic Onboarding",pc1_f:"one-time ↗",pc2_l:"Monthly Retainer",pc2_f:"per month ↗",pc3_l:"Equity — Path",pc3_f:"base + milestones ↗",
+    eqa_amount:"2–3% → 7%",eqa_target:"target 7%",
+    v1:"Cliff 6 months — no equity before this point",v2:"Monthly vesting over 24 months (base quota)",
+    v3m:"Milestone tranches: +% on reaching agreed targets",v4a:"Capital increase (AUCAP): anti-dilution protection on each round",
+    s5_disc:"The percentages shown are indicative and reflect the long-term vision for this partnership. All details — quotas, milestones, legal instruments — will be agreed together should there be mutual interest in proceeding.",
+    s6_eyebrow:"Option B",s6_sub:"12 + 12 months · full-cycle",s6_headline:"Full commitment.",s6_vf:"base + milestones + AUCAP ↗",
+    pc3_l_b:"Equity — Path",eqb_amount:"3–5% → 10%",eqb_target:"target 10% · 3 years",
+    b1:"Active EU / PNRR grant scouting &amp; application management",b2:"Chain structuring: replicable model, second-location planning",
+    b3m:"Milestone tranches on agreed targets: round closing, RevPAR, B Corp, new locations",b4a:"AUCAP: additional quota or anti-dilution at each capital increase",
+    s6_disc:"The percentages shown are indicative and reflect the long-term vision for this partnership. All details will be negotiated and formalised together, with legal counsel, should there be interest in proceeding.",
+    s7_eyebrow:"Profile",s7_headline:"Edoardo Parini.",
+    s7_role:"Innovation Strategy &amp; Tech Consultant<br><span style='color:var(--light)'>SaaS · AI · Web3 · ESG · Digital Payments</span>",
+    s7_bio1:"Dynamic consultant with 10+ years leading digital transformation across Europe. Multi-awarded under Horizon 2020. Design background from IED Rome and ECAL Lausanne, combined with financial and corporate strategy expertise.",
+    s7_bio2:"Operates as a <strong style='color:var(--black)'>portfolio advisor</strong> across concurrent ventures — cross-industry pattern recognition unavailable to single-sector consultants.",
+    st1:"Funding raised",st2:"Horizon 2020 awards",st3:"Ventures co-founded",st4:"Languages",
+    s8_eyebrow:"Next step",s8_display:"The right partner<br>isn't a vendor.",
+    s8_sub:"Every consultancy gives you a report. Edoardo gives you skin in the game — equity earned month by month, alongside you.",
+    s8_btn1:"Option A — 6+6 months",s8_btn2:"Option B — 12+12 months",
+    kb_hint:"← → arrow keys to navigate"
+  }
+};
+
+// ══════════════════════════════════════════════
+// MODAL DATA
+// ══════════════════════════════════════════════
+const DISC_IT = `<div class="modal-disclaimer">💡 Le percentuali indicate sono puramente indicative. Tutte le quote, le milestone e gli strumenti giuridici saranno definiti e concordati insieme, con il supporto di consulenti legali specializzati, qualora vi sia interesse a procedere.</div>`;
+const DISC_EN = `<div class="modal-disclaimer">💡 All percentages shown are indicative. Quotas, milestones and legal instruments will be defined and agreed together, with specialist legal counsel, should there be mutual interest in proceeding.</div>`;
+
+const MD = {
+  it:{
+    esg:{title:"ESG & Green Tech",body:`Edoardo ha co-fondato <strong>Oceanhis</strong> (Torino, 2021–2023), una startup green tech focalizzata sulla sostenibilità e l'eco-certificazione.<ul><li>Oltre <strong>€500k in funding non diluitivo</strong> (grant EU, programmi regionali)</li><li>Sviluppo di strumenti di eco-certificazione blockchain per supply chain</li><li>Esperienza concreta con framework ESG: GSTC, B Corp, LEED, CSRD</li><li>Formazione applicata su ESG reporting e KPI di impatto</li></ul>Questo si traduce direttamente nel guidare il progetto verso B Corp, conformità GSTC e una narrativa ESG credibile per gli investitori.`},
+    funding:{title:"Strategia Funding & Capitale",body:`In oltre 10 anni, Edoardo ha raccolto capitale su più strumenti:<ul><li><strong>€2M+</strong> in funding pubblico e privato combinato</li><li>Grant Horizon 2020 (pluripremiato, Top 10 European Health Tech)</li><li>Angel investor e round privati early-stage</li><li>Strategia campagne equity crowdfunding</li><li>Programmi PNRR e bandi regionali italiani</li></ul>Per questo progetto significa accesso concreto a reti di impact VC, pipeline grant EU e capacità di strutturare una narrativa fundraising per investitori ESG-focused.`},
+    gtm:{title:"Go-to-Market & Crescita",body:`In <strong>FoolFarm</strong> (Milano, 2023–2024), Edoardo ha supportato il lancio e la validazione di più venture B2B SaaS — da zero ai primi clienti:<ul><li>Posizionamento di mercato e analisi competitiva</li><li>Strategia canali e sviluppo partnership</li><li>Brand narrative e comunicazione con investitori</li></ul>Combinato con l'esposizione internazionale (Boston, Singapore, Tel Aviv), porta una prospettiva globale critica per attrarre ospiti e investitori internazionali.`},
+    'spec-legal':{title:"Network Legale & Corporate",body:`Include avvocati d'impresa e notai specializzati in:<ul><li>Costituzione Società Benefit e redazione statuto</li><li>Patti parasociali e clausole di vesting</li><li>Conformità normativa hotel e real estate</li><li>Term sheet investitori e gestione cap table</li></ul>`},
+    'spec-mkt':{title:"Network Marketing & PR",body:`Specialisti in marketing digitale e PR con esperienza hospitality:<ul><li>Brand identity e comunicazione visiva</li><li>Strategia social media (Instagram, TikTok travel)</li><li>Relazioni stampa (media travel, lifestyle, ESG)</li><li>Ottimizzazione OTA e strategia direct booking</li></ul>`},
+    'spec-esg':{title:"Network ESG Advisory",body:`Consulenti specializzati in certificazione e reporting sostenibilità:<ul><li>Assessment e supporto candidatura B Corp</li><li>Conformità GSTC</li><li>Integrazione LEED / BREEAM nella progettazione</li><li>Redazione report annuale di impatto e allineamento GRI</li></ul>`},
+    'spec-fin':{title:"Finance & Investor Relations",body:`Advisor finanziari e CFO-as-a-service per:<ul><li>Modellazione finanziaria e proiezioni RevPOR</li><li>Investor deck e preparazione data room</li><li>Supporto due diligence</li><li>Pianificazione cash flow per espansione multi-location</li></ul>`},
+    'spec-tech':{title:"Specialisti Tech & Digital",body:`Sviluppatori e system integrator hospitality:<ul><li>Selezione e integrazione PMS</li><li>Channel manager e connettività OTA</li><li>Infrastruttura pagamenti digitali e cashless</li><li>AI: dynamic pricing, chatbot concierge, gestione recensioni</li></ul>`},
+    'spec-re':{title:"Advisory Real Estate",body:`Consulenti immobiliari con esperienza in conversioni hospitality:<ul><li>Due diligence su immobili candidati</li><li>Fattibilità riconversione edifici storici</li><li>Supporto negoziazione contratti affitto a lungo termine</li><li>Coordinamento con amministrazioni locali</li></ul>`},
+    'spec-fund':{title:"Specialisti Fundraising",body:`Consulenti dedicati al fundraising e grant writer:<ul><li>Candidature PNRR Turismo e compliance</li><li>Programmi EU: LIFE, Horizon Europe, Creative Europe</li><li>Scouting bandi Regione Lombardia / Bergamo Sviluppo</li><li>Gestione campagne equity crowdfunding</li></ul>`},
+    'spec-intl':{title:"Network Internazionale",body:`Costruito attraverso anni di programmi internazionali:<ul><li>Connessioni Italian Trade Agency (Singapore, Israele)</li><li>Alumni Boston Innovation Gateway</li><li>Rete investitori impact europei</li><li>Slow Food International e operatori turismo gastronomico globale</li></ul>`},
+    'scope-1':{title:"Governance & Struttura Societaria",body:`<ul><li>Scelta della forma giuridica: Srl, Società Benefit, strutture ibride</li><li>Roadmap B Corp readiness dall'atto costitutivo</li><li>Patti parasociali: vesting, drag-along, tag-along, anti-diluzione</li><li>Onboarding investitori: term sheet, cap table, struttura board</li><li>Policy governance: conflitti di interesse, comitato ESG, codice condotta fornitori</li></ul>`},
+    'scope-2':{title:"Fundraising & Bandi Pubblici",body:`<ul><li><strong>Angel &amp; Impact VC:</strong> mappatura e warm introduction a investitori ESG-aligned</li><li><strong>PNRR:</strong> Ecobonus Turismo, crediti d'imposta ristrutturazione green (fino 65%)</li><li><strong>Fondi EU:</strong> LIFE, Horizon Europe, Creative Europe per turismo culturale</li><li><strong>Equity Crowdfunding:</strong> strategia su Mamacrowd / CrowdFundMe</li><li><strong>Green Loan:</strong> finanziamento sustainability-linked con tassi agevolati</li></ul>`},
+    'scope-3':{title:"GTM & Strategia di Brand",body:`<ul><li>Posizionamento vs TSH, Ostello Bello, Generator, Safestay</li><li>Brand architecture: naming, identità visiva, tone of voice</li><li>Strategia OTA: badge Sustainable Travel, ottimizzazione Hostelworld</li><li>Formalizzazione partnership Slow Food e co-marketing</li><li>Community building pre-apertura: newsletter, social, influencer</li><li>Media kit per lancio stampa</li></ul>`},
+    'scope-4':{title:"Framework ESG & Certificazioni",body:`<ul><li>Dashboard KPI: CO₂/pernottamento, % rinnovabile, % approvvigionamento locale</li><li>Report Annuale di Impatto (allineato GRI)</li><li>Roadmap B Corp: assessment, gap analysis, piano di miglioramento</li><li>Tracciamento conformità GSTC</li><li>Coordinamento LEED/BREEAM con architetto</li><li>Struttura contribuzione charity</li></ul>`},
+    'scope-5':{title:"Tech & Digitalizzazione",body:`<ul><li><strong>PMS:</strong> Cloudbeds, Mews o equivalente</li><li><strong>Channel Manager:</strong> SiteMinder o simile per connettività OTA</li><li><strong>Pagamenti Digitali:</strong> vending cashless, check-in contactless</li><li><strong>AI:</strong> dynamic pricing, risposte automatizzate recensioni, chatbot</li><li><strong>Coworking Tech:</strong> prenotazione desk, gestione Wi-Fi, accessi smart</li></ul>`},
+    'scope-6':{title:"Espansione & Investor Relations",body:`<ul><li>Operations manual replicabile: SOP, brand standard, formazione staff</li><li>Metodologia scouting: criteri per Torino, Bologna, Firenze</li><li>Strutturazione asset-light: affitti a lungo termine vs proprietà, franchising</li><li>Pitch deck e data room per investitori istituzionali</li><li>Preparazione Series A: target metriche, story arc, Q&amp;A</li></ul>`},
+    onb:{title:"Onboarding Strategico — €2.000",body:`La fee una tantum copre la fase iniziale di analisi:<ul><li>Analisi completa documenti, business plan, scenario competitivo</li><li>Mappatura stakeholder: investitori, partner, advisor, competitor</li><li>Priority matrix mesi 1–3</li><li>Introduzione ai contatti rilevanti del network</li><li>Advisory charter e metodologia di lavoro concordata</li></ul>Non è una "fee di attivazione" — è lavoro analitico reale che fissa la direzione dell'intero mandato.`},
+    retainer:{title:"Retainer Mensile — €1.800–2.200",body:`Il retainer copre disponibilità continuativa e coordinamento attivo:<ul><li>Call strategiche settimanali o bisettimanali (60–90 min)</li><li>Disponibilità async per domande, revisione documenti, introduzioni</li><li>Coordinamento network specialisti (legale, ESG, tech, fundraising)</li><li>Revisione pitch, candidature bandi, contratti</li><li>Brief mensile con priorità e avanzamento</li></ul>`},
+    'equity-a':{title:"Equity Opzione A — Percorso verso il 7%",body:`<strong>Struttura a tre livelli:</strong><br><br><strong>Livello 1 — Base (2–3%)</strong><br>Vesting mensile su 24 mesi con cliff di 6 mesi. Si guadagna mese per mese con la sola continuità del mandato.<br><br><strong>Livello 2 — Milestone (+2–3%)</strong><br>Tranche aggiuntive al raggiungimento di obiettivi concordati, ad esempio: closing primo round di investimento, raggiungimento occupazione target, avvio certificazione B Corp, apertura seconda location.<br><br><strong>Livello 3 — AUCAP (protezione)</strong><br>Ad ogni aumento di capitale, possibilità di mantenere la propria percentuale tramite diritto di seguito o quota aggiuntiva concordata.` + DISC_IT},
+    'equity-b':{title:"Equity Opzione B — Percorso verso il 10%",body:`<strong>Struttura a tre livelli — obiettivo 10% in 3 anni:</strong><br><br><strong>Livello 1 — Base (3–5%)</strong><br>Vesting mensile su 36 mesi con cliff di 6 mesi. Maturazione progressiva con continuità del mandato.<br><br><strong>Livello 2 — Milestone (+3–5%)</strong><br>Tranche aggiuntive su obiettivi concordati: closing round Series A, RevPAR target raggiunto, certificazione B Corp ottenuta, seconda o terza location aperta, obiettivi ESG misurabili conseguiti.<br><br><strong>Livello 3 — AUCAP</strong><br>Ad ogni aumento di capitale (es. AUCAP per nuovi investitori): diritto di sottoscrivere quote proporzionali per evitare diluizione, o riconoscimento di quota aggiuntiva come incentivo per il buon esito dell'operazione.` + DISC_IT},
+    milestones:{title:"Tranche Milestone — Come funziona",body:`Le tranche milestone sono quote di equity aggiuntive rispetto alla base, che maturano al raggiungimento di obiettivi <strong>concreti e misurabili</strong>, concordati insieme all'inizio del mandato.<br><br><strong>Esempi di milestone tipiche:</strong><ul><li>Closing primo round di investimento ≥ €X</li><li>Tasso di occupazione ≥ Y% entro Z mesi dall'apertura</li><li>Certificazione B Corp ottenuta</li><li>Apertura seconda location operativa</li><li>RevPAR medio ≥ €X per 3 mesi consecutivi</li><li>Partnership Slow Food formalizzata e attiva</li></ul>Ogni tranche viene definita, quantificata e inserita nel contratto <strong>prima</strong> di iniziare. Non c'è arbitrarietà: o l'obiettivo è raggiunto, o non lo è.` + DISC_IT},
+    aucap:{title:"AUCAP — Aumento di Capitale",body:`Un AUCAP (Aumento di Capitale) avviene quando la società emette nuove quote per raccogliere capitali da nuovi investitori. Senza protezione, i soci esistenti vengono <strong>diluiti</strong> — la loro percentuale si riduce.<br><br><strong>Come viene gestito per Edoardo:</strong><ul><li><strong>Diritto di seguito (pro-rata):</strong> possibilità di sottoscrivere nuove quote proporzionalmente alla propria quota, mantenendo la percentuale invariata</li><li><strong>Quota incentivo AUCAP:</strong> se Edoardo ha contribuito attivamente al buon esito della raccolta (es. ha introdotto l'investitore o preparato la data room), viene riconosciuta una quota aggiuntiva</li><li><strong>Anti-diluzione parziale:</strong> clausola che limita la diluizione sotto una soglia minima concordata</li></ul>Il meccanismo specifico verrà scelto insieme in base alla struttura societaria e alle preferenze di entrambe le parti.` + DISC_IT},
+    cliff:{title:"Il Cliff da 6 Mesi",body:`Il cliff è la protezione standard per il fondatore:<ul><li>Durante i primi 6 mesi, <strong>zero equity</strong> indipendentemente dal lavoro svolto</li><li>Al mese 6, matura in un'unica soluzione la quota dei primi 6 mesi</li><li>Dal mese 7, vesting mensile in rate uguali</li></ul>Se Edoardo lascia al mese 3, se ne va senza nulla — il cap table di Laura resta intatto.`},
+    'vest-monthly':{title:"Vesting Mensile",body:`Dopo il cliff, ogni mese attivo matura una quota:<ul><li>Opzione A base (2–3% su 24 mesi): ~0,08–0,125% al mese post-cliff</li><li>Opzione B base (3–5% su 36 mesi): ~0,08–0,14% al mese post-cliff</li></ul>Incentivo continuo: ogni mese Edoardo rimane e contribuisce, la sua partecipazione cresce.`},
+    'onb-b':{title:"Onboarding Strategico — €3.000 (Opzione B)",body:`Scope ampliato rispetto all'Opzione A:<ul><li>Benchmarking competitivo completo (TSH, Ostello Bello, Generator, Safestay)</li><li>Mappatura funding: tutti i bandi IT ed EU disponibili per i 12 mesi successivi</li><li>Audit tech stack e shortlist vendor</li><li>Roadmap 12 mesi con milestone e KPI</li></ul>`},
+    'retainer-b':{title:"Retainer Mensile — €2.800–3.500 (Opzione B)",body:`Scope ampliato rispetto all'Opzione A:<ul><li>Redazione e gestione attiva candidature bandi (non solo advisory)</li><li>Presenza regolare a riunioni chiave</li><li>Coordinamento completo fase implementazione tech</li><li>Report trimestrali scritti per investitori e board</li><li>Analisi fattibilità seconda location nell'anno 2</li></ul>`},
+    'b-grant':{title:"Gestione Attiva Bandi",body:`<ul><li>PNRR Ecobonus Turismo: fino al 65% credito d'imposta su ristrutturazione green</li><li>Programmi Regione Lombardia / Bergamo Sviluppo</li><li>Programma EU LIFE per progetti ambientali</li><li>Cluster Horizon Europe per hospitality sostenibile</li></ul>Uno specialista bandi del network gestisce la candidatura tecnica; Edoardo coordina strategia e narrativa.`},
+    'b-chain':{title:"Strutturazione Catena",body:`<ul><li>Operations playbook: SOP replicabili, brand standard, onboarding manager locali</li><li>Modello di scoring location: flusso turistico, concorrenza, costi immobiliari, ecosistema Slow Food</li><li>Top candidati: Torino (HQ Slow Food), Bologna (UNESCO gastronomia), Firenze (traffico internazionale)</li><li>Analisi asset-light vs asset-heavy per location</li><li>Modello franchising o joint-venture per espansione accelerata</li></ul>`},
+    'stat-fund':{title:"€2M+ Raccolti",body:`<ul><li><strong>Deed</strong> (IoT/Fintech, Torino): €2M da grant pubblici e investitori privati</li><li><strong>Oceanhis</strong> (Green Tech, Torino): €500k+ in funding EU non diluitivo</li><li>Round aggiuntivi per Air Business Card (Londra) e altre venture</li></ul>`},
+    'stat-hz':{title:"Riconoscimenti Horizon 2020",body:`<ul><li><strong>EIT Health</strong> — Top 10 Best Health European Technology (2021)</li><li><strong>Invest Horizon</strong> — Top 10 Best European Technology (2021)</li><li><strong>Smartees</strong> — Top 5 Best Hardware European Technology (2021)</li><li><strong>Seal of Excellence</strong> — H2020 Research &amp; Innovation Award (2020)</li><li><strong>Gartner publication</strong> — Future Tech Trends (2019, 5 volte)</li></ul>`},
+    'stat-ven':{title:"5 Venture Co-Fondate",body:`<ul><li><strong>Snaproof</strong> (2024–oggi): certificazione digitale, fintech, ESG</li><li><strong>Oceanhis</strong> (2021–2023): green tech, eco-certificazione, funding EU</li><li><strong>Air Business Card</strong> (2020, Londra): IoT per il settore eventi</li><li><strong>Deed</strong> (2016–2024): deep tech, biometria, cybersecurity, pagamenti digitali</li><li><strong>FoolFarm</strong> ventures (2023–2024): B2B SaaS in mercati regolamentati</li></ul>`},
+    'stat-lang':{title:"Lingue",body:`<ul><li><strong>Italiano</strong> — Madrelingua</li><li><strong>Inglese</strong> — Avanzato</li><li><strong>Francese</strong> — Avanzato (ECAL Losanna, HES-SO)</li><li><strong>Spagnolo</strong> — Base</li></ul>`}
+  },
+  en:{
+    esg:{title:"ESG & Green Tech",body:`Edoardo co-founded <strong>Oceanhis</strong> (Turin, 2021–2023), a green tech startup focused on sustainability and eco-certification.<ul><li>Over <strong>€500k in non-dilutive funding</strong> (EU grants, regional programs)</li><li>Developed blockchain eco-certification tools for supply chains</li><li>Hands-on experience with ESG frameworks: GSTC, B Corp, LEED, CSRD</li><li>Applied work on ESG reporting and impact KPIs</li></ul>`},
+    funding:{title:"Funding & Capital Strategy",body:`Over 10 years of fundraising across multiple instruments:<ul><li><strong>€2M+</strong> in combined public and private funding</li><li>Horizon 2020 grants (multiple awards, Top 10 European Health Tech)</li><li>Angel investors and early-stage private rounds</li><li>Equity crowdfunding campaign strategy</li><li>PNRR and regional Italian grant programs</li></ul>`},
+    gtm:{title:"Go-to-Market & Growth Strategy",body:`At <strong>FoolFarm</strong> (Milan, 2023–2024), Edoardo supported the launch and validation of multiple B2B SaaS ventures — from zero to first customers:<ul><li>Market positioning and competitive analysis</li><li>Channel strategy and partnership development</li><li>Brand narrative and investor communication</li></ul>Combined with international exposure (Boston, Singapore, Tel Aviv), this brings a global lens critical for attracting international guests and investors.`},
+    'spec-legal':{title:"Legal & Corporate Network",body:`Experienced corporate lawyers and notaries specialised in:<ul><li>Società Benefit formation and statutory drafting</li><li>Shareholder agreements and vesting clauses</li><li>Hotel and real estate regulatory compliance</li><li>Investor term sheets and cap table management</li></ul>`},
+    'spec-mkt':{title:"Marketing & PR Network",body:`Digital marketing specialists and PR consultants with hospitality experience:<ul><li>Brand identity and visual communication</li><li>Social media strategy (Instagram, TikTok for travel audiences)</li><li>Press relations (travel, lifestyle, ESG media)</li><li>OTA optimisation and direct booking strategy</li></ul>`},
+    'spec-esg':{title:"ESG Advisory Network",body:`Specialist consultants for sustainability certification and reporting:<ul><li>B Corp assessment and application support</li><li>GSTC compliance</li><li>LEED / BREEAM architectural integration</li><li>Annual impact report drafting and GRI alignment</li></ul>`},
+    'spec-fin':{title:"Finance & Investor Relations",body:`Financial advisors and CFO-as-a-service for:<ul><li>Financial modelling and RevPOR projections</li><li>Investor deck and data room preparation</li><li>Due diligence support</li><li>Cash flow planning for multi-location expansion</li></ul>`},
+    'spec-tech':{title:"Tech & Digital Specialists",body:`Developers and system integrators specialised in hospitality technology:<ul><li>PMS selection and integration</li><li>Channel manager and OTA connectivity</li><li>Digital payment infrastructure and cashless solutions</li><li>AI: dynamic pricing, chatbot concierge, review management</li></ul>`},
+    'spec-re':{title:"Real Estate Advisory",body:`Real estate consultants with experience in hospitality conversions:<ul><li>Due diligence on potential properties</li><li>Historic building and adaptive reuse feasibility</li><li>Long-term lease negotiation support</li><li>Coordination with local administrations</li></ul>`},
+    'spec-fund':{title:"Fundraising Specialists",body:`Dedicated fundraising consultants and grant writers:<ul><li>PNRR Turismo applications and compliance</li><li>EU programs: LIFE, Horizon Europe, Creative Europe</li><li>Regional Bergamo / Lombardia grant scouting</li><li>Equity crowdfunding campaign management</li></ul>`},
+    'spec-intl':{title:"International Network",body:`Built through years of international programs:<ul><li>Italian Trade Agency connections (Singapore, Israel)</li><li>Boston Innovation Gateway alumni</li><li>European impact investor network</li><li>Slow Food International and global food tourism operators</li></ul>`},
+    'scope-1':{title:"Governance & Corporate Structure",body:`<ul><li>Legal form selection: Srl, Società Benefit, hybrid structures</li><li>B Corp readiness roadmap from incorporation</li><li>Shareholder agreements: vesting, drag-along, tag-along, anti-dilution</li><li>Investor onboarding: term sheets, cap table, board structure</li><li>Governance policies: ESG committee, supplier code of conduct</li></ul>`},
+    'scope-2':{title:"Fundraising & Public Grants",body:`<ul><li><strong>Angel &amp; Impact VC:</strong> mapping and warm introductions to ESG-aligned investors</li><li><strong>PNRR:</strong> Ecobonus Turismo, tax credits for green renovation (up to 65%)</li><li><strong>EU Funds:</strong> LIFE, Horizon Europe, Creative Europe for cultural tourism</li><li><strong>Equity Crowdfunding:</strong> campaign strategy on Mamacrowd / CrowdFundMe</li><li><strong>Green Loans:</strong> sustainability-linked financing with preferential rates</li></ul>`},
+    'scope-3':{title:"GTM & Brand Strategy",body:`<ul><li>Competitive positioning vs TSH, Ostello Bello, Generator, Safestay</li><li>Brand architecture: name, visual identity brief, tone of voice</li><li>OTA strategy: Sustainable Travel badge, Hostelworld optimisation</li><li>Slow Food partnership formalisation and co-marketing</li><li>Pre-opening community building: newsletter, social, influencer outreach</li></ul>`},
+    'scope-4':{title:"ESG Framework & Certifications",body:`<ul><li>KPI dashboard: CO₂/stay, % renewable energy, % local sourcing, waste diversion</li><li>Annual Impact Report (GRI-aligned)</li><li>B Corp certification roadmap: assessment, gap analysis, improvement plan</li><li>GSTC compliance tracking</li><li>LEED/BREEAM coordination with architect</li></ul>`},
+    'scope-5':{title:"Tech & Digitalisation",body:`<ul><li><strong>PMS:</strong> Cloudbeds, Mews or equivalent</li><li><strong>Channel Manager:</strong> SiteMinder or similar</li><li><strong>Digital Payments:</strong> cashless vending, contactless check-in</li><li><strong>AI:</strong> dynamic pricing, automated review responses, chatbot</li><li><strong>Coworking Tech:</strong> desk booking, Wi-Fi management, smart access</li></ul>`},
+    'scope-6':{title:"Expansion & Investor Relations",body:`<ul><li>Replicable operations manual: SOPs, brand standards, staff training</li><li>Location scouting methodology for Turin, Bologna, Florence</li><li>Asset-light model: long-term leases vs ownership, franchise options</li><li>Pitch deck and data room for institutional investors</li><li>Series A preparation: metrics targets, story arc, investor Q&amp;A</li></ul>`},
+    onb:{title:"Strategic Onboarding — €2.000",body:`The one-time fee covers the initial deep-dive phase:<ul><li>Full analysis of project documents, business plan, competitive landscape</li><li>Stakeholder mapping: investors, partners, advisors, competitors</li><li>Priority matrix for months 1–3</li><li>Introduction to relevant network contacts</li><li>Advisory charter and working methodology agreement</li></ul>`},
+    retainer:{title:"Monthly Retainer — €1.800–2.200",body:`The retainer covers ongoing advisory availability and active coordination:<ul><li>Weekly or bi-weekly strategic calls (60–90 min)</li><li>Async availability for questions, document review, introductions</li><li>Coordination of specialist network</li><li>Review and feedback on pitch materials, grant applications, contracts</li><li>Monthly brief summarising priorities and progress</li></ul>`},
+    'equity-a':{title:"Equity Option A — Path to 7%",body:`<strong>Three-level structure:</strong><br><br><strong>Level 1 — Base (2–3%)</strong><br>Monthly vesting over 24 months with 6-month cliff. Earned month by month through mandate continuity.<br><br><strong>Level 2 — Milestones (+2–3%)</strong><br>Additional tranches upon reaching agreed targets: first investment round closing, occupancy target, B Corp certification, second location opening.<br><br><strong>Level 3 — AUCAP (protection)</strong><br>At each capital increase, the option to maintain one's percentage through pro-rata rights or an agreed additional quota.` + DISC_EN},
+    'equity-b':{title:"Equity Option B — Path to 10%",body:`<strong>Three-level structure — target 10% in 3 years:</strong><br><br><strong>Level 1 — Base (3–5%)</strong><br>Monthly vesting over 36 months with 6-month cliff. Progressive accrual with mandate continuity.<br><br><strong>Level 2 — Milestones (+3–5%)</strong><br>Additional tranches on agreed targets: Series A closing, RevPAR target reached, B Corp certification, second or third location opened, measurable ESG objectives achieved.<br><br><strong>Level 3 — AUCAP</strong><br>At each capital increase: right to subscribe proportional shares to avoid dilution, or recognition of additional quota as incentive for a successful outcome.` + DISC_EN},
+    milestones:{title:"Milestone Tranches — How it works",body:`Milestone tranches are additional equity beyond the base, which vest upon reaching <strong>concrete, measurable objectives</strong> agreed at the start of the mandate.<br><br><strong>Typical milestone examples:</strong><ul><li>First investment round closing ≥ €X</li><li>Occupancy rate ≥ Y% within Z months of opening</li><li>B Corp certification obtained</li><li>Second location open and operational</li><li>Average RevPAR ≥ €X for 3 consecutive months</li><li>Slow Food partnership formalised and active</li></ul>Each tranche is defined, quantified and included in the contract <strong>before</strong> starting. No ambiguity: either the objective is reached, or it isn't.` + DISC_EN},
+    aucap:{title:"AUCAP — Capital Increase",body:`A capital increase (AUCAP) occurs when the company issues new shares to raise capital from new investors. Without protection, existing shareholders get <strong>diluted</strong> — their percentage shrinks.<br><br><strong>How it works for Edoardo:</strong><ul><li><strong>Pro-rata right:</strong> option to subscribe new shares proportionally, maintaining one's percentage</li><li><strong>AUCAP incentive quota:</strong> if Edoardo contributed actively to the successful outcome of the raise (e.g. introduced the investor or prepared the data room), an additional quota is recognised</li><li><strong>Partial anti-dilution:</strong> clause limiting dilution below an agreed minimum threshold</li></ul>The specific mechanism will be chosen together based on corporate structure and the preferences of both parties.` + DISC_EN},
+    cliff:{title:"The 6-Month Cliff",body:`Standard protection for the founder (Laura):<ul><li>During the first 6 months, <strong>zero equity</strong> regardless of work done</li><li>At month 6, the first 6 months' worth vests all at once</li><li>From month 7, monthly vesting in equal instalments</li></ul>If Edoardo leaves at month 3, he leaves with nothing — Laura's cap table stays intact.`},
+    'vest-monthly':{title:"Monthly Vesting",body:`After the cliff, each active month earns a quota:<ul><li>Option A base (2–3% over 24 months): ~0.08–0.125% per month post-cliff</li><li>Option B base (3–5% over 36 months): ~0.08–0.14% per month post-cliff</li></ul>Continuous incentive: every month Edoardo stays and delivers, his stake grows.`},
+    'onb-b':{title:"Strategic Onboarding — €3.000 (Option B)",body:`Expanded scope vs Option A:<ul><li>Full competitive benchmarking report (TSH, Ostello Bello, Generator, Safestay)</li><li>Funding landscape mapping: all available Italian and EU grants for 12 months</li><li>Tech stack audit and vendor shortlist</li><li>12-month priority roadmap with milestones and KPIs</li></ul>`},
+    'retainer-b':{title:"Monthly Retainer — €2.800–3.500 (Option B)",body:`Expanded scope vs Option A:<ul><li>Active grant application writing and management</li><li>Regular presence at key meetings</li><li>Full coordination of tech implementation phase</li><li>Quarterly written reports for investors and board</li><li>Second-location feasibility analysis in year 2</li></ul>`},
+    'b-grant':{title:"Active Grant Management",body:`<ul><li>PNRR Ecobonus Turismo: up to 65% tax credit on green renovation costs</li><li>Regione Lombardia / Bergamo Sviluppo programs</li><li>EU LIFE Programme for environmental projects</li><li>Horizon Europe clusters for sustainable hospitality</li></ul>`},
+    'b-chain':{title:"Chain Structuring",body:`<ul><li>Operations playbook: replicable SOPs, brand standards, local manager onboarding</li><li>Location scoring model: tourist flow, competition, real estate cost, Slow Food ecosystem</li><li>Top candidates: Turin (Slow Food HQ), Bologna (UNESCO food city), Florence</li><li>Asset-light vs asset-heavy analysis per location</li><li>Franchise or joint-venture model design</li></ul>`},
+    'stat-fund':{title:"€2M+ Raised",body:`<ul><li><strong>Deed</strong> (IoT/Fintech, Turin): €2M from public grants and private investors</li><li><strong>Oceanhis</strong> (Green Tech, Turin): €500k+ in non-dilutive EU funding</li><li>Additional rounds for Air Business Card (London) and other ventures</li></ul>`},
+    'stat-hz':{title:"Horizon 2020 Recognition",body:`<ul><li><strong>EIT Health</strong> — Top 10 Best Health European Technology (2021)</li><li><strong>Invest Horizon</strong> — Top 10 Best European Technology (2021)</li><li><strong>Smartees</strong> — Top 5 Best Hardware European Technology (2021)</li><li><strong>Seal of Excellence</strong> — H2020 Research &amp; Innovation Award (2020)</li><li><strong>Gartner publication</strong> — Future Tech Trends (2019, 5 times)</li></ul>`},
+    'stat-ven':{title:"5 Ventures Co-Founded",body:`<ul><li><strong>Snaproof</strong> (2024–present): digital certification, fintech, ESG</li><li><strong>Oceanhis</strong> (2021–2023): green tech, eco-certification, EU funding</li><li><strong>Air Business Card</strong> (2020, London): IoT for the events industry</li><li><strong>Deed</strong> (2016–2024): deep tech, biometrics, cybersecurity, digital payments</li><li><strong>FoolFarm</strong> ventures (2023–2024): B2B SaaS in regulated markets</li></ul>`},
+    'stat-lang':{title:"Languages",body:`<ul><li><strong>Italian</strong> — Native speaker</li><li><strong>English</strong> — Advanced</li><li><strong>French</strong> — Advanced (ECAL Lausanne, HES-SO)</li><li><strong>Spanish</strong> — Basic</li></ul>`}
+  }
+};
+
+// ══════════════════════════════════════════════
+// ENGINE
+// ══════════════════════════════════════════════
+let lang='it', current=0;
+const slides=document.querySelectorAll('.slide'), total=slides.length;
+const dotContainer=document.getElementById('dots');
+slides.forEach((_,i)=>{const d=document.createElement('div');d.className='dot'+(i===0?' active':'');d.onclick=()=>goTo(i);dotContainer.appendChild(d);});
+
+function setLang(l){
+  lang=l;
+  document.getElementById('btn-it').classList.toggle('active',l==='it');
+  document.getElementById('btn-en').classList.toggle('active',l==='en');
+  document.getElementById('kb-hint').textContent=T[l].kb_hint;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.dataset.i18n;if(T[l][k]!==undefined)el.innerHTML=T[l][k];});
+}
+
+function goTo(idx){
+  if(idx===current||idx<0||idx>=total)return;
+  slides[current].classList.remove('active');slides[current].classList.add('exit');
+  const p=current;setTimeout(()=>slides[p].classList.remove('exit'),500);
+  current=idx;const s=slides[current];
+  s.style.transform='translateX(60px)';s.style.opacity='0';s.classList.add('active');
+  requestAnimationFrame(()=>{s.style.transform='';s.style.opacity='';});
+  updateUI();
+}
+
+function updateUI(){
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===current));
+  document.getElementById('counter').textContent=`${current+1} / ${total}`;
+  document.getElementById('progress-bar').style.width=`${((current+1)/total)*100}%`;
+  document.getElementById('prev').classList.toggle('dim',current===0);
+  document.getElementById('next').classList.toggle('dim',current===total-1);
+  const dark=slides[current].classList.contains('slide-dark');
+  document.getElementById('counter').style.color=dark?'rgba(255,255,255,.3)':'rgba(0,0,0,.25)';
+  document.getElementById('kb-hint').style.color=dark?'rgba(255,255,255,.18)':'rgba(0,0,0,.2)';
+  document.getElementById('lang-toggle').style.borderColor=dark?'rgba(255,255,255,.2)':'rgba(0,0,0,.15)';
+  document.querySelectorAll('.lang-btn:not(.active)').forEach(b=>b.style.color=dark?'rgba(255,255,255,.4)':'rgba(0,0,0,.35)');
+  ['prev','next'].forEach(id=>{const el=document.getElementById(id);if(dark){el.style.background='rgba(255,255,255,.1)';el.style.borderColor='rgba(255,255,255,.15)';el.querySelector('svg').style.stroke='#fff';}else{el.style.background='rgba(0,0,0,.07)';el.style.borderColor='rgba(0,0,0,.1)';el.querySelector('svg').style.stroke='#1d1d1f';}});
+  dotContainer.querySelectorAll('.dot').forEach(d=>d.style.background=dark?'rgba(255,255,255,.3)':'rgba(0,0,0,.18)');
+  dotContainer.querySelectorAll('.dot')[current].style.background=dark?'#fff':'#1d1d1f';
+}
+
+document.getElementById('prev').onclick=()=>goTo(current-1);
+document.getElementById('next').onclick=()=>goTo(current+1);
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('modal-overlay').classList.contains('open')){if(e.key==='Escape')closeModal();return;}
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')goTo(current+1);
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp')goTo(current-1);
+});
+let tx=0;
+document.getElementById('deck').addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
+document.getElementById('deck').addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>50)dx<0?goTo(current+1):goTo(current-1);},{passive:true});
+
+function openModal(key){const m=MD[lang][key];if(!m)return;document.getElementById('modal-title').innerHTML=m.title;document.getElementById('modal-body').innerHTML=m.body;document.getElementById('modal-overlay').classList.add('open');}
+function closeModal(e){if(e&&e.target!==document.getElementById('modal-overlay')&&e.target!==document.getElementById('modal-close'))return;document.getElementById('modal-overlay').classList.remove('open');}
+
+document.getElementById('progress-bar').style.width=`${(1/total)*100}%`;
+updateUI();
+</script>
+</body>
+</html>
